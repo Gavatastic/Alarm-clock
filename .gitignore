@@ -1,0 +1,6 @@
+Ref code/
+SAMD21_SSD1306_001/Debug
+SAMD21_SSD1306_001/src/ASF
+*.zip
+.DS_Store
+.vs

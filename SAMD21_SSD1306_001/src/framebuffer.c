@@ -315,7 +315,7 @@ void buffer_drawButtonOutlines(uint8_t *buffer)
 	
 }
 
-void buffer_drawButtons(uint8_t *buffer, uint16_t buttonstates) 
+void buffer_drawButtonStates(uint8_t *buffer, uint16_t buttonstates) 
 {
 		
 	for(uint8_t i=0;i<14;i++)

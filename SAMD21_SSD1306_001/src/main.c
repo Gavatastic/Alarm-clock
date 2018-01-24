@@ -10,19 +10,13 @@
 /*
 Keyboard mapping
 
-Inputs
-PB07 - Column 1
-PB06 - Column 2
-PB05 - Column 3
-PB04 - Column 4
-
-PB03 - Row 1
-PB02 - Row 2
-PB01 - Row 3
-PB00 - Row 4
+Flow from Row pins to Col pins
 
 */
 
+const uint8_t KeyRowPins[4] = {PIN_PB07,PIN_PB06,PIN_PB05,PIN_PB04,};
+const uint8_t KeyColPins[4] = {PIN_PB03,PIN_PB02,PIN_PB01,PIN_PB00,};
+	
 
 const uint8_t Atomic []  = {
 	0x00, 0x00, 0x00, 0x07, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0xF0, 0x00, 0x00, 0x00,
@@ -67,22 +61,101 @@ void configure_port_pins(void)
 	struct port_config config_port_pin;
 	
 	// Inputs
-	port_get_config_defaults(&config_port_pin);
-	config_port_pin.direction  = PORT_PIN_DIR_INPUT;
-	config_port_pin.input_pull = PORT_PIN_PULL_DOWN;
-	port_pin_set_config(PIN_PB03, &config_port_pin);
+	for (uint8_t i=0; i<4; i++) 
+	{
+		port_get_config_defaults(&config_port_pin);
+		config_port_pin.direction  = PORT_PIN_DIR_INPUT;
+		config_port_pin.input_pull = PORT_PIN_PULL_DOWN;
+		port_pin_set_config(KeyColPins[i], &config_port_pin);
+	}
 	
 	// Outputs
-	config_port_pin.direction = PORT_PIN_DIR_OUTPUT;
-	port_pin_set_config(PIN_PB02, &config_port_pin);
-	//config_port_pin.direction = PORT_PIN_DIR_OUTPUT;
-	//port_pin_set_config(PIN_PB01, &config_port_pin);
-	//config_port_pin.direction = PORT_PIN_DIR_OUTPUT;
-	//port_pin_set_config(PIN_PB02, &config_port_pin);
-	//config_port_pin.direction = PORT_PIN_DIR_OUTPUT;
-	//port_pin_set_config(PIN_PB03, &config_port_pin);	
+	for (uint8_t i=0; i<4; i++) 
+	{
+		config_port_pin.direction = PORT_PIN_DIR_OUTPUT;
+		port_pin_set_config(KeyRowPins[i], &config_port_pin);
+	}
 
 }
+
+
+uint8_t IdentifyButton(uint8_t row, uint8_t col)
+{
+
+	switch (col)
+	{
+		case PIN_PB00:
+		switch (row)
+		{
+			case PIN_PB04:
+			return 1;
+			break;
+			case PIN_PB05:
+			return 4;
+			break;
+			case PIN_PB06:
+			return 7;
+			break;
+		}
+		break;
+
+		case PIN_PB01:
+		switch (row)
+		{
+			case PIN_PB04:
+			return 2;
+			break;
+			case PIN_PB05:
+			return 5;
+			break;
+			case PIN_PB06:
+			return 8;
+			break;
+			case PIN_PB07:
+			return 10;
+			break;
+		}
+		break;
+		
+		case PIN_PB02:
+		switch (row)
+		{
+			case PIN_PB04:
+			return 3;
+			break;
+			case PIN_PB05:
+			return 6;
+			break;
+			case PIN_PB06:
+			return 9;
+			break;
+		}
+		break;
+
+		case PIN_PB03:
+		switch (row)
+		{
+			case PIN_PB04:
+			return 11;
+			break;
+			case PIN_PB05:
+			return 12;
+			break;
+			case PIN_PB06:
+			return 13;
+			break;
+			case PIN_PB07:
+			return 14;
+			break;
+		}
+		break;
+		
+		
+	}
+	
+	return 15;
+}
+
 
 
 int main (void)
@@ -95,8 +168,6 @@ int main (void)
 	ioport_init();
 	configure_port_pins();
 
-	//ioport_set_port_dir(KeyRows, KeyRowMask, IOPORT_DIR_OUTPUT);	
-	//ioport_set_port_dir(KeyCols, KeyColMask, IOPORT_DIR_INPUT);	
 			 
     configure_i2c_master();
 	SSD1306_init();
@@ -111,48 +182,25 @@ int main (void)
 	buffer_drawButtonOutlines(fb);
 	SSD1306_send_buffer(fb);
     
-	port_pin_set_output_level(PIN_PB00, true);
-	port_pin_set_output_level(PIN_PB01, true);
-	port_pin_set_output_level(PIN_PB02, true);
-	port_pin_set_output_level(PIN_PB03, true);
-	
-	 
-	 
+
 	while(1==1)
 	{
+
 		buttons=0;
-		//for (uint8_t row=0; row<4; row++)
-		//{
-			//ioport_set_port_level(KeyRows, KeyRowMask, 1<<row);
-			//keyvalue=ioport_get_port_level(KeyRows, KeyRowMask);
-//
-			//for (uint8_t col=0; col<4; col++)
-			//{
-				//if (keyvalue & (1<<col)) buttons = buttons & (1<<((row*4)+col));	
-			//}	
-			//
-		//}
-		//if (keyvalue==0) 
-		//{
-			//buffer_WriteText(fb,&robo12_FontInfo,"0",0,0,2);
-		//} else {
-			//buffer_WriteText(fb,&robo12_FontInfo,"X",0,0,2);
-		//}
-		//buffer_drawButtonStates(fb,buttons);
-		
-		if (port_pin_get_input_level(PIN_PB04)) 
+		for(uint8_t i=0; i<4; i++)
 		{
-			buffer_drawButtonStates(fb,1);
-		} else {
-			buffer_drawButtonStates(fb,0);
-			
+			port_pin_set_output_level(KeyRowPins[i], true);
+			for(uint8_t j=0; j<4; j++)			
+			{
+				if(port_pin_get_input_level(KeyColPins[j])) 
+				{
+					buttons=buttons + (1<<(IdentifyButton(KeyRowPins[i],KeyColPins[j])-1));
+				}
+			}
+			port_pin_set_output_level(KeyRowPins[i], false);
 		}
-		
+		buffer_drawButtonStates(fb,buttons);
 		SSD1306_send_buffer(fb);
 	}
 	
-
-	
-	
 }
-

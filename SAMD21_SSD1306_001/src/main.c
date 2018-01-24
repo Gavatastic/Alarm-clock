@@ -1,5 +1,5 @@
 //  BSS138 mosfets
-
+// Breshanen line drawing
 
 
 #include <asf.h>
@@ -57,23 +57,24 @@ int main (void)
 	buffer_drawBitmap(fb, Atomic,64,64,32,0);
 	SSD1306_send_buffer(fb);
 	
-	delay_s(2);
+	delay_s(1);
   
 	buffer_clear(fb);
-	buffer_WriteTextToConsole(fb,&robo12_FontInfo,"Hello world!");
+	buffer_drawButtonOutlines(fb);
 	SSD1306_send_buffer(fb);
 
-
+	
 
      
 	while(1==1)
 	{
-		SSD1306_invert(false);
-		delay_s(1);
-		SSD1306_invert(true);
-		delay_s(1);
 
-		
+		for (uint16_t buttons=0; buttons<16384; buttons++)
+		{
+			buffer_drawButtons(fb,buttons);
+			SSD1306_send_buffer(fb);
+			
+		}		
 	}
 	
 

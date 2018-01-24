@@ -21,6 +21,7 @@ void buffer_drawHLine(uint8_t *buffer, uint8_t x, uint8_t y, uint8_t length);
 void buffer_drawRectangle(uint8_t *buffer, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 void buffer_drawBitmap(uint8_t *buffer, const uint8_t *bitmap, uint8_t height, uint8_t width, uint8_t pos_x, uint8_t pos_y);
 
-void buffer_drawButtons(uint8_t *buffer);
+void buffer_drawButtonOutlines(uint8_t *buffer);
+void buffer_drawButtons(uint8_t *buffer, uint16_t buttonstates);
 
 #endif

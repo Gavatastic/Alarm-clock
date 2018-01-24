@@ -2,6 +2,10 @@
 #include <framebuffer.h>
 #include <bitmap_db.h>
 #include "string.h"
+#include "stdint.h"
+
+
+const uint16_t KeyPos[14]={0,16,32,256,256+16,256+32,512,512+16,512+32,768+16,56,56+256,56+512,56+768,};
 
 const uint8_t LEFT=0;
 const uint8_t CENTRE=1;
@@ -296,18 +300,36 @@ void Byte2String (char* outstr ,uint8_t u8t)
   outstr[2]=0x30 + (uint8_t)(u8t%10);
 }
 
-void buffer_drawButtons(uint8_t *buffer) 
+void buffer_drawButtonOutlines(uint8_t *buffer)
 {
-	buffer_clear(buffer);
 	
-	buffer[0]=0xFE;
-	buffer[15]=0xFE;
+	for(uint8_t i=0;i<14;i++)
+	{
+		memset(&buffer[1+KeyPos[i]],0xFE,1);
+		memset(&buffer[2+KeyPos[i]],0x02,12);
+		memset(&buffer[14+KeyPos[i]],0xFE,1);
+		memset(&buffer[1+128+KeyPos[i]],0x7F,1);
+		memset(&buffer[2+128+KeyPos[i]],0x40,12);
+		memset(&buffer[14+128+KeyPos[i]],0x7F,1);
+	}
 	
-	//
-	//for (uint8_t i=1, i<15, i++) 
-	//{
-////		buffer[i]
-		//
-	//}
+}
+
+void buffer_drawButtons(uint8_t *buffer, uint16_t buttonstates) 
+{
+		
+	for(uint8_t i=0;i<14;i++)
+	{
+		if (buttonstates & (1<<i))
+		{
+			memset(&buffer[3+KeyPos[i]],0xFA,10);   // ON
+			memset(&buffer[3+128+KeyPos[i]],0x5F,10);
+		} else {
+			memset(&buffer[3+KeyPos[i]],0x02,10);	// OFF
+			memset(&buffer[3+128+KeyPos[i]],0x40,10);
+		}
+	}
+	
+
 	
 }

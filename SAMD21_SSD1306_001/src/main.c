@@ -6,6 +6,8 @@
 #include <I2C.h>
 #include <SSD1306.h>
 #include <framebuffer.h>
+#include <TPIC6B595.h>
+
 
 /*
 Keyboard mapping
@@ -16,7 +18,7 @@ Flow from Row pins to Col pins
 
 const uint8_t KeyRowPins[4] = {PIN_PB07,PIN_PB06,PIN_PB05,PIN_PB04,};
 const uint8_t KeyColPins[4] = {PIN_PB03,PIN_PB02,PIN_PB01,PIN_PB00,};
-	
+
 
 const uint8_t Atomic []  = {
 	0x00, 0x00, 0x00, 0x07, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0xF0, 0x00, 0x00, 0x00,
@@ -54,7 +56,7 @@ const uint8_t Atomic []  = {
 };
 
 uint8_t fb[SSD1306_BUFFERSIZE];
-
+uint8_t ss[4];
 
 void configure_port_pins(void)
 {
@@ -161,14 +163,20 @@ uint8_t IdentifyButton(uint8_t row, uint8_t col)
 int main (void)
 {
 	uint16_t buttons;
-	uint32_t keyvalue;
+
+	uint8_t brightness=0x7F;
+	
 	
 	system_init();
 	delay_init();
 	ioport_init();
 	configure_port_pins();
 
-			 
+	shftreg_init();
+	shftreg_blank();
+	shftreg_blank();
+	
+
     configure_i2c_master();
 	SSD1306_init();
   
@@ -181,7 +189,14 @@ int main (void)
 	buffer_clear(fb);
 	buffer_drawButtonOutlines(fb);
 	SSD1306_send_buffer(fb);
-    
+
+	// Test seven segment display
+	ss[0]=1;
+	ss[1]=2;
+	ss[2]=3;
+	ss[3]=4;
+
+	shftreg_display(ss);    
 
 	while(1==1)
 	{
@@ -201,6 +216,21 @@ int main (void)
 		}
 		buffer_drawButtonStates(fb,buttons);
 		SSD1306_send_buffer(fb);
+		
+		if (buttons & (1<<12) || buttons & (1<<13))
+		{
+			if (buttons & (1<<12)) brightness+=4;
+			if (buttons & (1<<13)) brightness-=4;
+			shftreg_bright(brightness);
+			ss[0]=brightness>>4;
+			ss[2]=brightness>>4;
+			ss[1]=brightness & 0x0f;
+			ss[3]=brightness & 0x0f;
+			shftreg_display(ss);		
+			
+		}
+
+		
 	}
 	
 }
